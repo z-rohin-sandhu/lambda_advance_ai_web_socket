@@ -1,4 +1,5 @@
-from src.redis_store.client import get_redis_client
+from operator import ge
+from src.redis_store.client import get_client
 from src.config.env import EnvConfig
 from src.constants.redis_keys import (
     WS_CONNECTION_KEY,
@@ -10,7 +11,7 @@ from src.utils.json_utils import json_dumps, json_loads
 
 def register_connection(connection_id: str) -> None:
     print(f"[session_store.register_connection] connection_id={connection_id}")
-    redis_client = get_redis_client()
+    redis_client = get_client()
 
     redis_client.setex(
         WS_CONNECTION_KEY.format(connection_id=connection_id),
