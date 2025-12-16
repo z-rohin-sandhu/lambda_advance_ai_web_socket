@@ -1,14 +1,30 @@
 from src.websocket.sender import WebSocketSender
+from src.redis_store.session_store import bind_session_to_connection
 
 def handle_get_response(event, payload):
-    ws = WebSocketSender(event)
+    websocket_sender = WebSocketSender(event)
 
-    ws.send({
-        "action": "ack",
-        "message": "get_response received, processing will start soon"
-    })
+    session_id = payload.get("state_json_key")
+    if not session_id:
+        websocket_sender.send(
+            {
+                "action": "error",
+                "message": "state_json_key is required",
+            }
+        )
+        return {"statusCode": 400}
 
-    return {
-        "statusCode": 200,
-        "body": "get_response acknowledged"
-    }
+    bind_session_to_connection(
+        session_id=session_id,
+        connection_id=websocket_sender.connection_id,
+    )
+
+    websocket_sender.send(
+        {
+            "action": "ack",
+            "message": "Session bound successfully",
+            "session_id": session_id,
+        }
+    )
+
+    return {"statusCode": 200}
