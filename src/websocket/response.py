@@ -1,5 +1,6 @@
 from typing import Any, Dict
 from src.utils.time import current_datetime_utc
+from src.utils.logging import log
 
 
 def build_ws_response(
@@ -17,5 +18,9 @@ def build_ws_response(
         },
     }
 
-    print(f"[build_ws_response] {response}")
+    log(
+        "build_ws_response",
+        action=action,
+        data_keys=list((data or {}).keys())
+    )
     return response

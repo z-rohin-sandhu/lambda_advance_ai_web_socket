@@ -6,6 +6,7 @@ from src.websocket.sender import WebSocketSender
 
 import json
 import traceback
+from src.utils.logging import log
 
 
 def dispatch(event, context):
@@ -13,7 +14,7 @@ def dispatch(event, context):
         request_context = event.get("requestContext", {})
         route_key = request_context.get("routeKey")
 
-        print(f"[dispatcher] route_key={route_key}")
+        log("dispatcher route", route_key=route_key)
 
         if route_key == "$connect":
             handle_connect(event)
@@ -26,13 +27,13 @@ def dispatch(event, context):
         # $default route
         body = event.get("body")
         if not body:
-            print("[dispatcher] empty body")
+            log("dispatcher empty body")
             return {"statusCode": 200}
 
         payload = json.loads(body)
         action = payload.get("action")
 
-        print(f"[dispatcher] action={action}")
+        log("dispatcher action", action=action)
 
         if action == "ping":
             handle_ping(event, payload)
@@ -53,8 +54,8 @@ def dispatch(event, context):
 
     except Exception as exc:
         # ABSOLUTELY CRITICAL: swallow exception
-        print("[dispatcher] UNHANDLED ERROR")
-        print(traceback.format_exc())
+        log("dispatcher unhandled error", level="ERROR", error=str(exc))
+        log(traceback.format_exc(), level="ERROR")
 
         try:
             websocket = WebSocketSender(event)

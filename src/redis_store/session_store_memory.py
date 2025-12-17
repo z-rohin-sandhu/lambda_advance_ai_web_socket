@@ -6,15 +6,13 @@ from src.constants.redis_keys import (
 )
 from src.redis_store.memory_store import InMemoryRedis
 from src.utils.time import current_timestamp
+from src.utils.logging import log
 
 
 class WebSocketSessionStoreMemory:
     @staticmethod
     def register_connection(connection_id: str) -> None:
-        print(
-            "[session_store.memory.register_connection] "
-            f"connection_id={connection_id}"
-        )
+        log("session_store.memory.register_connection", connection_id=connection_id)
 
         InMemoryRedis.set(
             key=WS_CONNECTION_KEY.format(connection_id=connection_id),
@@ -27,10 +25,7 @@ class WebSocketSessionStoreMemory:
 
     @staticmethod
     def unregister_connection(connection_id: str) -> None:
-        print(
-            "[session_store.memory.unregister_connection] "
-            f"connection_id={connection_id}"
-        )
+        log("session_store.memory.unregister_connection", connection_id=connection_id)
 
         InMemoryRedis.delete(
             WS_CONNECTION_KEY.format(connection_id=connection_id)
@@ -40,9 +35,10 @@ class WebSocketSessionStoreMemory:
     def bind_session_to_connection(
         session_id: str, connection_id: str
     ) -> None:
-        print(
-            "[session_store.memory.bind_session_to_connection] "
-            f"session_id={session_id}, connection_id={connection_id}"
+        log(
+            "session_store.memory.bind_session_to_connection",
+            session_id=session_id,
+            connection_id=connection_id,
         )
 
         InMemoryRedis.set(
@@ -56,19 +52,13 @@ class WebSocketSessionStoreMemory:
 
     @staticmethod
     def get_connection_for_session(session_id: str):
-        print(
-            "[session_store.memory.get_connection_for_session] "
-            f"session_id={session_id}"
-        )
+        log("session_store.memory.get_connection_for_session", session_id=session_id)
 
         raw_data = InMemoryRedis.get(
             WS_SESSION_KEY.format(session_id=session_id)
         )
 
         found = bool(raw_data)
-        print(
-            "[session_store.memory.get_connection_for_session] "
-            f"found={found}"
-        )
+        log("session_store.memory.get_connection_for_session.result", found=found)
 
         return raw_data

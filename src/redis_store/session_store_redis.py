@@ -6,15 +6,13 @@ from src.constants.redis_keys import (
 from src.redis_store.client import get_client
 from src.utils.time import current_timestamp
 from src.utils.json_utils import json_dumps, json_loads
+from src.utils.logging import log
 
 
 class WebSocketSessionStoreRedis:
     @staticmethod
     def register_connection(connection_id: str) -> None:
-        print(
-            "[session_store.redis.register_connection] "
-            f"connection_id={connection_id}"
-        )
+        log("session_store.redis.register_connection", connection_id=connection_id)
 
         redis_client = get_client()
         redis_client.setex(
@@ -30,10 +28,7 @@ class WebSocketSessionStoreRedis:
 
     @staticmethod
     def unregister_connection(connection_id: str) -> None:
-        print(
-            "[session_store.redis.unregister_connection] "
-            f"connection_id={connection_id}"
-        )
+        log("session_store.redis.unregister_connection", connection_id=connection_id)
 
         redis_client = get_client()
         redis_client.delete(
@@ -44,9 +39,10 @@ class WebSocketSessionStoreRedis:
     def bind_session_to_connection(
         session_id: str, connection_id: str
     ) -> None:
-        print(
-            "[session_store.redis.bind_session_to_connection] "
-            f"session_id={session_id}, connection_id={connection_id}"
+        log(
+            "session_store.redis.bind_session_to_connection",
+            session_id=session_id,
+            connection_id=connection_id,
         )
 
         redis_client = get_client()
@@ -63,10 +59,7 @@ class WebSocketSessionStoreRedis:
 
     @staticmethod
     def get_connection_for_session(session_id: str):
-        print(
-            "[session_store.redis.get_connection_for_session] "
-            f"session_id={session_id}"
-        )
+        log("session_store.redis.get_connection_for_session", session_id=session_id)
 
         redis_client = get_client()
         raw_data = redis_client.get(
@@ -74,9 +67,6 @@ class WebSocketSessionStoreRedis:
         )
 
         found = bool(raw_data)
-        print(
-            "[session_store.redis.get_connection_for_session] "
-            f"found={found}"
-        )
+        log("session_store.redis.get_connection_for_session.result", found=found)
 
         return json_loads(raw_data) if raw_data else None

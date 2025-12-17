@@ -4,10 +4,11 @@ import traceback
 import redis
 
 from src.config.base import BaseConfig
+from src.utils.logging import log
 
 def get_client():
     try:
-        print("[Redis] Initializing Redis client")
+        log("Redis initializing client")
         client = redis.Redis(
             host=BaseConfig.REDIS_HOST,
             port=BaseConfig.REDIS_PORT,
@@ -16,9 +17,9 @@ def get_client():
             decode_responses=True,
         )
         client.ping()
-        print("[Redis] Redis connection successful")
+        log("Redis connection successful")
         return client
     except Exception:
-        print("[Redis] Redis connection failed")
-        print(traceback.format_exc())
+        log("Redis connection failed", level="ERROR")
+        log(traceback.format_exc(), level="ERROR")
         return None

@@ -2,6 +2,7 @@ from typing import Any, Dict, Optional
 
 from src.utils.json_utils import json_dumps, json_loads
 from src.utils.time import current_timestamp
+from src.utils.logging import log
 
 
 class InMemoryRedis:
@@ -21,25 +22,22 @@ class InMemoryRedis:
             "expires_at": expires_at,
         }
 
-        print(
-            "[InMemoryRedis.set] "
-            f"key={key}, ttl={ttl_seconds}, expires_at={expires_at}"
-        )
+        log("InMemoryRedis.set", key=key, ttl=ttl_seconds, expires_at=expires_at)
 
     @classmethod
     def get(cls, key: str) -> Optional[dict]:
         record = cls._STORE.get(key)
 
         if not record:
-            print(f"[InMemoryRedis.get] key={key} NOT FOUND")
+            log("InMemoryRedis.get miss", key=key)
             return None
 
         if record["expires_at"] < current_timestamp():
-            print(f"[InMemoryRedis.get] key={key} EXPIRED")
+            log("InMemoryRedis.get expired", key=key)
             cls._STORE.pop(key, None)
             return None
 
-        print(f"[InMemoryRedis.get] key={key} HIT")
+        log("InMemoryRedis.get hit", key=key)
         return json_loads(record["value"])
 
     @classmethod
@@ -47,7 +45,4 @@ class InMemoryRedis:
         existed = key in cls._STORE
         cls._STORE.pop(key, None)
 
-        print(
-            "[InMemoryRedis.delete] "
-            f"key={key}, existed={existed}"
-        )
+        log("InMemoryRedis.delete", key=key, existed=existed)
