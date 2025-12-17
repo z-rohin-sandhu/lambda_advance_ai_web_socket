@@ -1,13 +1,11 @@
 from src.websocket.sender import WebSocketSender
 from src.redis_store import session_store
+from src.services.fake_streaming_service import fake_stream_response
 from src.utils.logging import log
 
 
 def handle_get_response(event, payload):
-    log(
-        "handle_get_response",
-        payload_keys=list(payload.keys()) if isinstance(payload, dict) else "n/a",
-    )
+    log("handle_get_response invoked", payload=payload)
 
     websocket = WebSocketSender(event)
     connection_id = websocket.connection_id
@@ -15,23 +13,11 @@ def handle_get_response(event, payload):
     session_id = payload.get("state_json_key")
 
     if not session_id:
-        log("handle_get_response missing state_json_key")
-
         websocket.send(
             action="error",
-            data={
-                "message": "state_json_key is required"
-            },
+            data={"message": "state_json_key is required"},
         )
-
-        # IMPORTANT: never return 4xx / 5xx for WebSocket
         return {"statusCode": 200}
-
-    log(
-        "handle_get_response binding session",
-        session_id=session_id,
-        connection_id=connection_id,
-    )
 
     session_store.bind_session_to_connection(
         session_id=session_id,
@@ -41,9 +27,11 @@ def handle_get_response(event, payload):
     websocket.send(
         action="ack",
         data={
-            "message": "Session bound successfully",
+            "message": "Session bound, streaming will start",
             "session_id": session_id,
         },
     )
+
+    fake_stream_response(event)
 
     return {"statusCode": 200}
