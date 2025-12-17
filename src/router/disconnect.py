@@ -1,8 +1,8 @@
-from src.redis_store.session_store import unregister_connection
+from src.redis_store import session_store
 
 def handle_disconnect(event):
     connection_id = event["requestContext"]["connectionId"]
-    unregister_connection(connection_id)
+    session_store.unregister_connection(connection_id)
 
     return {
         "statusCode": 200,

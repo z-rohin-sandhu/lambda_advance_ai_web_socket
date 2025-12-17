@@ -1,8 +1,9 @@
-from src.redis_store.session_store import register_connection
+from src.redis_store import session_store
+
 
 def handle_connect(event):
     connection_id = event["requestContext"]["connectionId"]
-    register_connection(connection_id)
+    session_store.register_connection(connection_id)
 
     return {
         "statusCode": 200,

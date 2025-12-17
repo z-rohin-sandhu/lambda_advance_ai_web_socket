@@ -4,7 +4,6 @@ from src.constants.redis_keys import (
     DEFAULT_SESSION_TTL_SECONDS_SECONDS
 )
 from src.constants.aws import DEFAULT_AWS_REGION
-import os
 
 
 
@@ -23,3 +22,4 @@ class BaseConfig:
     # TTLs
     CONNECTION_TTL_SECONDS = int(get_env("CONNECTION_TTL_SECONDS", DEFAULT_CONNECTION_TTL_SECONDS))
     SESSION_TTL_SECONDS = int(get_env("SESSION_TTL_SECONDS", DEFAULT_SESSION_TTL_SECONDS_SECONDS))
+    REDIS_ENABLED = get_env("REDIS_ENABLED", "false").lower() == "true"
