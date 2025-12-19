@@ -1,9 +1,9 @@
 import time
 from src.websocket.sender import WebSocketSender
-from src.websocket.stream import WebSocketStream
+from src.services.fake_streaming_service import fake_stream_response
+import traceback
 from src.redis_store import session_store
 from src.utils.logging import log
-import traceback
 
 
 def handle_get_response(event, payload):
@@ -31,20 +31,7 @@ def handle_get_response(event, payload):
             },
         })
 
-        stream = WebSocketStream(event)
-
-        chunks = ["Hello", " this", " is", " a", " streamed", " response"]
-
-        for chunk in chunks:
-            stream.send_chunk(
-                text=chunk,
-                audio=None,
-                is_last=False,
-            )
-            time.sleep(0.3)
-
-        # Logical end of THIS GPT response
-        stream.complete()
+        fake_stream_response(event)
 
     except Exception as exc:
         log("get_response failed", level="ERROR", error=str(exc))
