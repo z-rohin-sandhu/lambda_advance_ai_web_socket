@@ -2,11 +2,14 @@ from src.router.connect import handle_connect
 from src.router.disconnect import handle_disconnect
 from src.router.ping import handle_ping
 from src.router.get_response import handle_get_response
-from src.websocket.sender import WebSocketSender
-
-import json
-import traceback
+from src.utils.constants import (
+    DEFAULT_WS_SUCCESS_RESPONSE,
+    WS_ACTION_PING,
+    WS_ACTION_GET_RESPONSE,
+)
+from src.utils.json_utils import json_loads
 from src.utils.logging import log
+import traceback
 
 
 def dispatch(event, context):
@@ -16,43 +19,36 @@ def dispatch(event, context):
 
         log("dispatcher route", route_key=route_key)
 
+        # --- SYSTEM ROUTES ---
         if route_key == "$connect":
-            handle_connect(event)
-            return {"statusCode": 200}
+            return handle_connect(event)
 
         if route_key == "$disconnect":
-            handle_disconnect(event)
-            return {"statusCode": 200}
+            return handle_disconnect(event)
 
-        # $default route
+        # --- APPLICATION ROUTES ---
         body = event.get("body")
         if not body:
             log("dispatcher empty body")
-            return {"statusCode": 200}
+            return DEFAULT_WS_SUCCESS_RESPONSE
 
-        payload = json.loads(body)
+        payload = json_loads(body)
         action = payload.get("action")
 
         log("dispatcher action", action=action)
 
-        if action == "ping":
+        if action == WS_ACTION_PING:
             handle_ping(event, payload)
-            return {"statusCode": 200}
 
-        if action == "get_response":
+        elif action == WS_ACTION_GET_RESPONSE:
             handle_get_response(event, payload)
-            return {"statusCode": 200}
 
-        # Unknown action — DO NOT throw
-        websocket = WebSocketSender(event)
-        websocket.send(action="error", data={
-            "message": f"Unknown action: {action}"
-        })
+        else:
+            log("dispatcher unknown action", action=action)
 
-        return {"statusCode": 200}
 
     except Exception as exc:
         log("dispatcher unhandled error", level="ERROR", error=str(exc))
         log(traceback.format_exc(), level="ERROR")
-
-        return {"statusCode": 200}
+    
+    return DEFAULT_WS_SUCCESS_RESPONSE

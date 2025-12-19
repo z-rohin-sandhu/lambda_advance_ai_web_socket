@@ -6,7 +6,7 @@ def json_dumps(data):
         return json.dumps(data)
     except Exception as exc:
         log("json_dumps failed", level="ERROR", error=str(exc))
-        return {}
+        return ""
 
 def json_loads(data):
     try:
