@@ -1,6 +1,8 @@
 import json
 import boto3
 from src.websocket.response import build_ws_response
+from src.utils.logging import log
+
 
 
 class WebSocketSender:
@@ -11,7 +13,7 @@ class WebSocketSender:
 
         endpoint_url = f"https://{domain_name}/{stage}"
 
-        print(
+        log(
             "[WebSocketSender] init "
             f"connection_id={self.connection_id}, "
             f"endpoint={endpoint_url}"
@@ -25,9 +27,10 @@ class WebSocketSender:
     def send(self, action: str, data: dict | None = None) -> None:
         payload = build_ws_response(action=action, data=data)
 
-        print(
-            "[WebSocketSender.send] "
-            f"connection_id={self.connection_id}, action={action}"
+        log(
+            "WebSocketSender.send",
+            connection_id=self.connection_id,
+            action=action,
         )
 
         self.client.post_to_connection(

@@ -53,18 +53,7 @@ def dispatch(event, context):
         return {"statusCode": 200}
 
     except Exception as exc:
-        # ABSOLUTELY CRITICAL: swallow exception
         log("dispatcher unhandled error", level="ERROR", error=str(exc))
         log(traceback.format_exc(), level="ERROR")
-
-        try:
-            websocket = WebSocketSender(event)
-            websocket.send({
-                "action": "error",
-                "message": "Internal server error"
-            })
-        except Exception:
-            # Even this must not crash Lambda
-            pass
 
         return {"statusCode": 200}
