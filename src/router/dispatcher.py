@@ -45,8 +45,7 @@ def dispatch(event, context):
 
         # Unknown action — DO NOT throw
         websocket = WebSocketSender(event)
-        websocket.send({
-            "action": "error",
+        websocket.send(action="error", data={
             "message": f"Unknown action: {action}"
         })
 

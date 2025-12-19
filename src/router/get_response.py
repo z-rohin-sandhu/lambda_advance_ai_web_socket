@@ -12,8 +12,7 @@ def handle_get_response(event, payload):
     try:
         session_id = payload.get("state_json_key")
         if not session_id:
-            websocket.send({
-                "action": "error",
+            websocket.send(action="error", data={
                 "message": "state_json_key is required",
             })
             return {"statusCode": 200}
@@ -23,12 +22,9 @@ def handle_get_response(event, payload):
             connection_id=websocket.connection_id,
         )
 
-        websocket.send({
-            "action": "ack",
-            "data": {
-                "message": "Session bound, streaming will start",
-                "session_id": session_id,
-            },
+        websocket.send(action="ack", data={
+            "message": "Session bound, streaming will start",
+            "session_id": session_id,
         })
 
         fake_stream_response(event)
