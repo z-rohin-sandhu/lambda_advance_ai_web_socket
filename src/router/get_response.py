@@ -3,6 +3,7 @@ from src.websocket.sender import WebSocketSender
 from src.websocket.stream import WebSocketStream
 from src.redis_store import session_store
 from src.utils.logging import log
+import traceback
 
 
 def handle_get_response(event, payload):
@@ -47,13 +48,7 @@ def handle_get_response(event, payload):
 
     except Exception as exc:
         log("get_response failed", level="ERROR", error=str(exc))
-        try:
-            websocket.send({
-                "action": "error",
-                "message": "Failed while generating response",
-            })
-        except Exception:
-            pass
+        log(traceback.format_exc(), level="ERROR")
 
     # WebSocket remains OPEN
     return {"statusCode": 200}
