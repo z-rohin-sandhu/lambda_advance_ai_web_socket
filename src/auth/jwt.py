@@ -2,7 +2,7 @@ import jwt
 from src.utils.logging import log
 from src.config.base import BaseConfig
 from src.utils.time import current_timestamp_utc
-from src.auth.blacklist import check_token_blacklisted_status
+from src.utils.utils import check_token_blacklisted_status
 
 
 class JWTAuthError(Exception):

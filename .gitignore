@@ -37,3 +37,4 @@ layers/**/*.zip
 # SAM / AWS build output
 # =========================
 .aws-sam/
+.env
