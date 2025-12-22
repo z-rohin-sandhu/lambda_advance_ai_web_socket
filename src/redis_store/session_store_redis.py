@@ -44,5 +44,16 @@ class WebSocketSessionStoreRedis:
     @staticmethod
     def get_session(session_id: str):
         redis_client = get_client()
-        raw = redis_client.get(WS_SESSION_KEY.format(session_id=session_id))
-        return json_loads(raw) if raw else None
+        key = WS_SESSION_KEY.format(session_id=session_id)
+
+        raw = redis_client.get(key)
+        if not raw:
+            return None
+
+        # Sliding TTL refresh
+        redis_client.expire(
+            key,
+            EnvConfig.REDIS_CONNECTION_TTL_SECONDS,
+        )
+
+        return json_loads(raw)
