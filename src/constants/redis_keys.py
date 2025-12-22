@@ -1,4 +1,3 @@
-WS_CONNECTION_KEY = "ws:conn:{connection_id}"
-WS_SESSION_KEY = "ws:session:{session_id}"
+WS_SESSION_CONNECTION_KEY = "ws:session:{session_id}:{connection_id}"
 DEFAULT_CONNECTION_TTL_SECONDS = 3600
 DEFAULT_SESSION_TTL_SECONDS_SECONDS = 21600
