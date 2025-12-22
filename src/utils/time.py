@@ -9,3 +9,7 @@ def current_timestamp() -> int:
 def current_datetime_utc() -> str:
     return datetime.now(timezone.utc).isoformat()
 
+
+def current_timestamp_utc() -> int:
+    return int(datetime.now(timezone.utc).timestamp())
+
