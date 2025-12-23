@@ -3,6 +3,8 @@ from typing import Dict
 
 from src.websocket.stream import WebSocketStream
 from src.services.advance_ai_service import AdvanceAIService
+from src.services.prompt_builder import build_prompt
+
 from src.utils.logging import log
 from src.utils.constants import (
     WS_ACTION_RESPONSE_CHUNK,
@@ -59,20 +61,7 @@ def run_stream(
             )
             return
 
-        messages = [
-            {
-                "role": "system",
-                "content": "You are a helpful AI assistant.",
-            },
-            {
-                "role": "user",
-                "content": user_query,
-            },
-        ]
-
-        llm_payload: Dict = {
-            "messages": messages,
-        }
+        llm_payload = build_prompt(payload=payload, session=session)
 
         resource = AdvanceAIService.fetch_advance_resources(
             brand_id=brand_id,

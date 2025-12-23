@@ -3,54 +3,21 @@ from src.utils.logging import log
 
 
 class WebSocketStream:
-    def __init__(self, event):
-        self.websocket = WebSocketSender(event)
-        self.sequence = 0
-        log("WebSocketStream initialized")
+    """
+    Transport adapter for streaming over WebSocket.
+    """
 
-    def send_chunk(self, text: str, is_last: bool = False):
-        payload = {
-            "sequence": self.sequence,
-            "text": text,
-            "audio": None,
-            "is_last": is_last,
-        }
+    def __init__(self, event: dict):
+        self.sender = WebSocketSender(event)
+        self.connection_id = self.sender.connection_id
 
         log(
-            "stream send_chunk",
-            sequence=self.sequence,
-            text_length=len(text),
-            is_last=is_last,
+            "WebSocketStream.init",
+            connection_id=self.connection_id,
         )
 
-        self.websocket.send(
-            action="response_chunk",
-            data=payload,
-        )
-
-        self.sequence += 1
-
-    def complete(self):
-        log(
-            "stream complete",
-            total_chunks=self.sequence,
-        )
-
-        self.websocket.send(
-            action="response_complete",
-            data={
-                "total_chunks": self.sequence,
-            },
-        )
-
-    def error(self, message: str):
-        log(
-            "stream error",
-            level="ERROR",
-            message=message,
-        )
-
-        self.websocket.send(
-            action="error",
-            data={"message": message},
-        )
+    def send(self, action: str, data: dict) -> None:
+        """
+        Send a streaming frame.
+        """
+        self.sender.send(action=action, data=data)
