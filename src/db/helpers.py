@@ -98,3 +98,24 @@ def get_account_id_by_story_id(story_id=None, cursor=None):
 
     except Exception as e:
         raise e
+
+
+def get_brand_settings_details_by_brand_id(brand_id=None, cursor=None):
+    """
+    Fetch brand_settings details by brand_id
+    """
+    try:
+        query = """
+            SELECT brand_settings.id as brand_settings_id, brand.bucket as bucket
+            FROM brand_settings
+            JOIN brand ON brand_settings.brand_id = brand.id
+            WHERE 
+                brand_settings.inactive_settings = 0
+                AND brand.inactive = 0
+                AND brand.id = %(brand_id)s            
+            LIMIT 1
+        """
+        params = {"brand_id": brand_id}
+        return Database.fetchone(cursor=cursor, query=query, params=params)
+    except Exception as e:
+        raise e

@@ -2,6 +2,7 @@ from src.redis_store import session_store
 from src.utils.logging import log
 from src.auth.jwt import verify_jwt_token_ws, JWTAuthError
 from src.utils.constants import DEFAULT_WS_SUCCESS_RESPONSE
+from src.db.helpers import get_brand_settings_details_by_brand_id
 
 
 def handle_connect(event):
@@ -29,6 +30,24 @@ def handle_connect(event):
             raise Exception("Unauthorized")
 
         decoded_token = verify_jwt_token_ws(token)
+        
+        brand_id = decoded_token.get("brand_id")
+        brand_settings_details = get_brand_settings_details_by_brand_id(brand_id=brand_id)
+        
+        if not brand_settings_details:
+            log(
+                "handle_connect brand settings not found",
+                level="ERROR",
+                brand_id=brand_id,
+                brand_settings_details=brand_settings_details,
+            )
+            raise Exception("Unauthorized")
+
+        bucket = brand_settings_details.get("bucket")
+        brand_settings_id = brand_settings_details.get("brand_settings_id")
+
+        decoded_token["bucket"] = bucket
+        decoded_token["brand_settings_id"] = brand_settings_id
 
         session_store.register_connection(
             connection_id=connection_id,
@@ -40,7 +59,10 @@ def handle_connect(event):
             "handle_connect success",
             connection_id=connection_id,
             session_id=session_id,
-            user_id=decoded_token.get("original_user", {}).get("user_id"),
+            user_id=decoded_token.get("user_id"),
+            brand_id=brand_id,
+            brand_settings_id=brand_settings_id,
+            bucket=bucket,
         )
 
         return DEFAULT_WS_SUCCESS_RESPONSE

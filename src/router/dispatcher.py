@@ -21,9 +21,11 @@ def dispatch(event, context):
 
         # --- SYSTEM ROUTES ---
         if route_key == "$connect":
+            log("dispatcher connect")
             return handle_connect(event)
 
         if route_key == "$disconnect":
+            log("dispatcher disconnect")
             return handle_disconnect(event)
 
         # --- APPLICATION ROUTES ---
@@ -38,9 +40,11 @@ def dispatch(event, context):
         log("dispatcher action", action=action)
 
         if action == WS_ACTION_PING:
+            log("dispatcher ping")
             handle_ping(event, payload)
 
         elif action == WS_ACTION_GET_RESPONSE:
+            log("dispatcher get response")
             handle_get_response(event, payload)
 
         else:

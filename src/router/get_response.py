@@ -1,44 +1,77 @@
 from src.websocket.sender import WebSocketSender
-from src.services.fake_streaming_service import fake_stream_response
 from src.redis_store import session_store
+from src.services.streaming_service import start_streaming_job
 from src.utils.logging import log
-import traceback
+from src.utils.constants import (
+    DEFAULT_WS_SUCCESS_RESPONSE,
+    WS_ACTION_ERROR,
+)
 
 
 def handle_get_response(event, payload):
+    """
+    Trigger AI response streaming over WebSocket.
+
+    Responsibilities:
+    - Validate payload
+    - Validate session existence
+    - Fire streaming job (non-blocking)
+    - NEVER close socket
+    - NEVER send ACK here
+    """
+
+    log("handle_get_response invoked", payload_keys=list(payload.keys()))
+
     websocket = WebSocketSender(event)
 
     try:
         session_id = payload.get("state_json_key")
         if not session_id:
             websocket.send(
-                action="error",
-                data={"message": "state_json_key is required"},
+                action=WS_ACTION_ERROR,
+                data={
+                    "error_code": "INVALID_REQUEST",
+                    "error_message": "state_json_key is required",
+                },
             )
-            return {"statusCode": 200}
+            return DEFAULT_WS_SUCCESS_RESPONSE
 
-        session_store.bind_session_to_connection(
+        session = session_store.get_session(session_id)
+        if not session:
+            websocket.send(
+                action=WS_ACTION_ERROR,
+                data={
+                    "error_code": "SESSION_NOT_FOUND",
+                    "error_message": "Session expired or invalid. Please reconnect.",
+                },
+            )
+            return DEFAULT_WS_SUCCESS_RESPONSE
+
+        start_streaming_job(
+            event=event,
+            payload=payload,
+            session=session,
+        )
+
+        log(
+            "get_response streaming triggered",
             session_id=session_id,
             connection_id=websocket.connection_id,
         )
 
+    except Exception as exc:
+        log(
+            "get_response failed",
+            level="ERROR",
+            error=str(exc),
+        )
+
         websocket.send(
-            action="ack",
+            action=WS_ACTION_ERROR,
             data={
-                "message": "Session bound, streaming will start",
-                "session_id": session_id,
+                "error_code": "GENERATION_FAILED",
+                "error_message": "Failed while generating response",
             },
         )
 
-        fake_stream_response(event)
-
-        log("get_response complete")
-
-    except Exception as exc:
-        log("get_response failed", level="ERROR", error=str(exc))
-        log(traceback.format_exc(), level="ERROR")
-        websocket.send(action="error", data={
-            "message": f"Failed while generating response: {str(exc)}",
-        })  
-
-    return {"statusCode": 200}
+    return DEFAULT_WS_SUCCESS_RESPONSE
