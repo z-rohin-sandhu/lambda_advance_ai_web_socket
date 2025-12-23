@@ -34,7 +34,6 @@ def start_streaming_job(
                 session=session,
             )
         except Exception as exc:
-            # Absolutely must not crash the process
             log(
                 "streaming_service.run_stream.failed",
                 level="ERROR",
@@ -44,6 +43,6 @@ def start_streaming_job(
 
     thread = threading.Thread(
         target=_runner,
-        daemon=True,  # critical: Lambda must not wait
+        daemon=True,
     )
     thread.start()

@@ -9,6 +9,7 @@ from src.constants.redis_keys import GPT_RESOURCE_CACHE_KEY, GPT_RESOURCE_INDEX_
 def get_llm_resource_round_robin(
     brand_id: int,
     brand_settings_id: int,
+    resource_type: str,
     bot_db=None,
 ) -> dict:
     """
@@ -37,7 +38,7 @@ def get_llm_resource_round_robin(
 
         rows = get_service_resources(
             brand_id=brand_id,
-            resource_type="Open AI Prediction",
+            resource_type=resource_type,
             cursor=bot_db,
         )
 

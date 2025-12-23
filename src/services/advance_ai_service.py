@@ -14,6 +14,7 @@ class AdvanceAIService:
     def fetch_advance_resources(
         brand_id: int,
         brand_settings_id: int,
+        resource_type: str,
         bot_db=None,
     ) -> dict:
         """
@@ -30,6 +31,7 @@ class AdvanceAIService:
         resource = get_llm_resource_round_robin(
             brand_id=brand_id,
             brand_settings_id=brand_settings_id,
+            resource_type=resource_type,
             bot_db=bot_db,
         )
 

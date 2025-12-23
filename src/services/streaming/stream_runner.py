@@ -50,6 +50,7 @@ def run_stream(
         decoded_token = session.get("decoded_token", {})
         brand_id = decoded_token.get("brand_id")
         brand_settings_id = decoded_token.get("brand_settings_id")
+        resource_type = decoded_token.get("resource_type")
 
         if not brand_id or not brand_settings_id:
             stream.send(
@@ -66,6 +67,7 @@ def run_stream(
         resource = AdvanceAIService.fetch_advance_resources(
             brand_id=brand_id,
             brand_settings_id=brand_settings_id,
+            resource_type=resource_type,
         )
 
         llm_stream = AdvanceAIService.create_llm_stream(

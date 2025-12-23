@@ -3,6 +3,7 @@ from src.utils.logging import log
 from src.auth.jwt import verify_jwt_token_ws, JWTAuthError
 from src.utils.constants import DEFAULT_WS_SUCCESS_RESPONSE
 from src.db.helpers import get_brand_settings_details_by_brand_id
+from src.utils.utils import get_resource_type_column_name
 
 
 def handle_connect(event):
@@ -48,6 +49,10 @@ def handle_connect(event):
 
         decoded_token["bucket"] = bucket
         decoded_token["brand_settings_id"] = brand_settings_id
+        
+        ai_type = params.get("ai_type", "gpt")
+        resource_type = get_resource_type_column_name(ai_type)
+        decoded_token["resource_type"] = resource_type
 
         session_store.register_connection(
             connection_id=connection_id,
@@ -63,6 +68,8 @@ def handle_connect(event):
             brand_id=brand_id,
             brand_settings_id=brand_settings_id,
             bucket=bucket,
+            ai_type=ai_type,
+            resource_type=resource_type,
         )
 
         return DEFAULT_WS_SUCCESS_RESPONSE
