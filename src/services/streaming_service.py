@@ -1,132 +1,49 @@
 import threading
-from typing import Dict, Any
+import traceback
 
-from src.websocket.stream import WebSocketStream
-from src.providers.llm.llm_factory import LLMStreamFactory
-from src.providers.tts.tts_factory import TTSFactory
+from src.services.streaming.stream_runner import run_stream
 from src.utils.logging import log
-from src.utils.constants import (
-    WS_ACTION_RESPONSE_CHUNK,
-    WS_ACTION_RESPONSE_COMPLETE,
-    WS_ACTION_ERROR,
-)
 
 
 def start_streaming_job(
     event: dict,
-    payload: Dict[str, Any],
-    session: Dict[str, Any],
+    payload: dict,
+    session: dict,
 ) -> None:
     """
-    Entry point for AI streaming.
+    Fire-and-forget streaming job.
 
-    This function MUST:
-    - Return immediately
+    Responsibilities:
     - Spawn background thread
-    - Never block Lambda execution
+    - Pass validated inputs to stream runner
+    - NEVER block Lambda
+    - NEVER raise
     """
 
     log(
-        "start_streaming_job invoked",
-        session_id=payload.get("state_json_key"),
+        "streaming_service.start_streaming_job",
+        session_id=session.get("session_id"),
+        connection_id=session.get("connection_id"),
     )
 
-    thread = threading.Thread(
-        target=_run_stream,
-        kwargs={
-            "event": event,
-            "payload": payload,
-            "session": session,
-        },
-        daemon=True,
-    )
-    thread.start()
-
-
-def _run_stream(
-    event: dict,
-    payload: Dict[str, Any],
-    session: Dict[str, Any],
-) -> None:
-    """
-    Streaming execution layer.
-
-    This is where:
-    - LLM streaming happens
-    - Optional TTS synthesis happens
-    - WebSocket chunks are pushed
-    """
-
-    session_id = payload.get("state_json_key")
-
-    log(
-        "stream execution started",
-        session_id=session_id,
-    )
-
-    try:
-        stream = WebSocketStream(event)
-
-        # 1️⃣ Resolve providers
-        llm_provider = LLMStreamFactory.get_provider(
-            provider_name=payload.get("llm_provider", "openai"),
-            session=session,
-            payload=payload,
-        )
-
-        tts_provider = None
-        if payload.get("story_type") == "audio":
-            tts_provider = TTSFactory.get_provider(
-                provider_name=payload.get("tts_provider", "deepgram"),
-                voice_id=payload.get("voice_id"),
+    def _runner():
+        try:
+            run_stream(
+                event=event,
+                payload=payload,
                 session=session,
             )
-
-        # 2️⃣ Stream from LLM
-        sequence_id = 0
-        full_text = ""
-
-        for llm_chunk in llm_provider.stream():
-            text_chunk = llm_chunk.get("text")
-            if not text_chunk:
-                continue
-
-            full_text += text_chunk
-
-            audio_base64 = None
-            if tts_provider:
-                audio_base64 = tts_provider.synthesize(text_chunk)
-
-            stream.send_chunk(
-                action=WS_ACTION_RESPONSE_CHUNK,
-                data={
-                    "bot_reply": text_chunk,
-                    "sequence_id": sequence_id,
-                    "audio": audio_base64,
-                },
+        except Exception as exc:
+            # Absolutely must not crash the process
+            log(
+                "streaming_service.run_stream.failed",
+                level="ERROR",
+                error=str(exc),
             )
+            log(traceback.format_exc(), level="ERROR")
 
-            sequence_id += 1
-
-        # 3️⃣ Final message
-        stream.send(
-            action=WS_ACTION_RESPONSE_COMPLETE,
-            data={
-                "status": "success",
-                "bot_reply": full_text,
-            },
-        )
-
-        log(
-            "stream execution completed",
-            session_id=session_id,
-            total_chunks=sequence_id,
-        )
-
-    except Exception as exc:
-        log(
-            "stream execution failed",
-            level="ERROR",
-            session_id=session_id,
-            error=str(exc),
-        )
+    thread = threading.Thread(
+        target=_runner,
+        daemon=True,  # critical: Lambda must not wait
+    )
+    thread.start()
