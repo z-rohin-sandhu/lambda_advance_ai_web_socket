@@ -2,8 +2,8 @@ import threading
 from typing import Dict, Any
 
 from src.websocket.stream import WebSocketStream
-from src.services.llm.llm_factory import LLMStreamFactory
-from src.services.tts.tts_factory import TTSFactory
+from src.providers.llm.llm_factory import LLMStreamFactory
+from src.providers.tts.tts_factory import TTSFactory
 from src.utils.logging import log
 from src.utils.constants import (
     WS_ACTION_RESPONSE_CHUNK,
@@ -130,15 +130,3 @@ def _run_stream(
             session_id=session_id,
             error=str(exc),
         )
-
-        try:
-            stream.send(
-                action=WS_ACTION_ERROR,
-                data={
-                    "error_code": "STREAMING_FAILED",
-                    "error_message": "Streaming failed. Please retry.",
-                },
-            )
-        except Exception:
-            # Socket may already be gone — swallow
-            pass
